@@ -1,5 +1,9 @@
 var $ = require("jquery2");
 
+var signals = {
+  _keyCode: []
+};
+
 var canvas = document.getElementById("layer3");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -29,23 +33,31 @@ canvas.addEventListener('click', function (evt) {
   var mousePos = getMousePos(canvas, evt);
   var x = Math.abs(Math.ceil((mousePos.x - 10) / 10));
   var y = Math.abs(Math.ceil((mousePos.y - 10) / 10));
-  console.log(world.at(x, y).mat.name);
-  if (world.at(x, y).mat.name === "vaccum") {
-    world.at(x, y).mat = material[1];
-  } else {
-    world.at(x, y).mat = material[0];
+  if (_.isFunction(signals.click)) {
+    signals.click(x, y);
   }
   console.log("click", x, y);
 }, false);
 
 $(window).keypress(function (e) {
-  if (e.keyCode === 0 || e.keyCode === 32) {
-    e.preventDefault();
-    physTick();
-  } else {
-    init();
+  console.log(e.keyCode);
+  var action = signals._keyCode[e.keyCode];
+  if (action) {
+    action(e);
   }
 });
 
 
-module.exports = {};
+module.exports = {
+  register: function (signal, func, caller) {
+    if (_.isNumber(signal)) {
+      signals._keyCode[signal] = function () {
+        func.apply(caller, arguments);
+      };
+    } else {
+      signals[signal] = function () {
+        func.apply(caller, arguments);
+      };
+    }
+  }
+};

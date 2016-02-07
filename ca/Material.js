@@ -1,32 +1,37 @@
-var cellSwap = function (cellA, cellB) {
-  if (cellB.accepts(cellA)) {
-    cellB.swap(cellA);
-    return true;
-  }
-  return false;
-};
-
-module.exports = {
-  0: {
-    name: "vaccum",
-    accepts: function (mat) {
+var materialDict = {
+  _symbolIndex: {
+    0: "vacuum",
+    1: "gravel",
+    2: "solid",
+    7: "conveyor"
+  },
+  _dataTransform: function (symbol) {
+    var mat = materialDict[materialDict._symbolIndex[symbol]];
+    if (mat) {
+      return materialDict[materialDict._symbolIndex[symbol]];
+    } else {
+      throw new Error("Unable to look up material with symbol" + symbol);
+    }
+  },
+  vacuum: {
+    name: "vacuum",
+    canSwap: function (mat) {
       return mat.name !== "vaccum";
     }
   },
-  1: {
+  gravel: {
     name: "gravel",
-    accepts: function (mat) {
+    canSwap: function (mat) {
       return false;
     },
     tick: function (cell) {
-      var adj = cell.chunk.getAdjacent(cell.x, cell.y);
-      cellSwap(cell, adj.do);
-      if (adj.do.stable) {
-        cellSwap(cell, adj.ll);
-        cellSwap(cell, adj.lr);
-      }
-      if (adj.do.mat.stable || adj.do.stable) {
-        cell.stable = true;
+      if (cell.body) {
+        var physPos = cell.body.position;
+        var physCell = cell.chunk.at((physPos.x - 15) / 10, (physPos.y - 15) / 10)
+        if (physCell !== cell) {
+          cell.chunk.sw(cell, physCell);
+          console.log(physPos);
+        }
       }
     },
     draw: function (ctx, cell) {
@@ -38,28 +43,25 @@ module.exports = {
       ctx.fillRect(cell.x * 10, cell.y * 10, 10, 10);
     }
   },
-  2: {
+  solid: {
     name: "solid",
     draw: function (ctx, cell) {
       ctx.fillStyle = "#333";
       ctx.fillRect(cell.x * 10, cell.y * 10, 10, 10);
     },
-    accepts: function (mat) {
+    canSwap: function (mat) {
       return false;
     },
     stable: true
   },
-  3: "boulder",
-  4: "liquid",
-  5: "gas",
-  6: {
+  void: {
     name: "void",
-    accepts: function (mat) {
+    canSwap: function (mat) {
       return false;
     },
     stable: true
   },
-  7: {
+  conveyor: {
     name: "conveyor",
     draw: function (ctx, cell) {
       if ((Math.ceil(ctx.time / 2) - cell.x) % 3 === 0) {
@@ -69,15 +71,17 @@ module.exports = {
       }
       ctx.fillRect(cell.x * 10, cell.y * 10, 10, 10);
     },
-    accepts: function (mat) {
+    canSwap: function (mat) {
       return false;
     },
     tick: function (cell) {
       var adj = cell.chunk.getAdjacent(cell.x, cell.y);
       if (!adj.up.isStable()) {
-        cellSwap(adj.up, adj.ul);
+        cell.chunk.sw(adj.up, adj.ul);
       }
     },
     stable: false
   }
 };
+
+module.exports = materialDict;
