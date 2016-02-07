@@ -25,18 +25,21 @@ var data = [
 var world;
 var init = function () {
   world = new Chunk(10, 10, data);
-  signals.register("click", world.gravelVacuumToggle, world);
+  signals.register("click", function (x, y) {
+    var cell = this.at(x, y);
+    if (cell.body) {
+      var physPos = cell.body.position;
+      console.log(x, y, " phys ", (physPos.x - 20) / 10, (physPos.y - 20) / 10);
+    }
+  }, world);
   world.startEngine();
 };
 init();
 
 // world tick
-var physTick = function (delta) {
-
+var physTick = function (delta, tickNo) {
   //Matter.Engine.update(eng, delta, 1);
-  console.log(world.eng.world.bodies[6].position);
-  console.log("asdf", delta);
-  world.tick();
+  world.tick(delta, tickNo);
 };
 signals.register(0, physTick, this);
 signals.register(32, physTick, this);
@@ -53,17 +56,17 @@ var draw = function () {
 
 // runner
 window.running = true;
-var time = 0;
+var tickNo = 0;
 var prev = new Date().getTime();
 var run = function () {
   var tick = function () {
     var now = new Date().getTime();
     var delta = now - prev;
-    time++;
-    if (time % 100 === 0) {
+    tickNo++;
+    if (tickNo % 100 === 0) {
       init();
     } else {
-      physTick(delta);
+      physTick(delta, tickNo);
       draw();
     }
     if (window.running) {

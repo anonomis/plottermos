@@ -30,7 +30,6 @@ var materialDict = {
         var physCell = cell.chunk.at((physPos.x - 15) / 10, (physPos.y - 15) / 10)
         if (physCell !== cell) {
           cell.chunk.sw(cell, physCell);
-          console.log(physPos);
         }
       }
     },
@@ -75,10 +74,10 @@ var materialDict = {
       return false;
     },
     tick: function (cell) {
-      var adj = cell.chunk.getAdjacent(cell.x, cell.y);
-      if (!adj.up.isStable()) {
-        cell.chunk.sw(adj.up, adj.ul);
-      }
+      //var adj = cell.chunk.getAdjacent(cell.x, cell.y);
+      //if (!adj.up.isStable()) {
+      //  cell.chunk.sw(adj.up, adj.ul);
+      //}
     },
     stable: false
   }

@@ -7,8 +7,8 @@ var ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-var W = ctx.canvas.width - 100;
-var H = ctx.canvas.height;
+var W = 300;
+var H = 300;
 
 // Define drawGrid function
 function drawGrid(options) {

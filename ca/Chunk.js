@@ -18,10 +18,14 @@ function Chunk(w, h, data) {
   }, this);
 }
 
-Chunk.prototype.tick = function () {
+Chunk.prototype.tick = function (delta, tickNo) {
+  this.swapsThisTick = 0;
   this.cells.forEach(function (cell) {
     cell.tick();
   });
+  if (this.swapsThisTick > 0) {
+    this.resetEngine();
+  }
 };
 
 Chunk.prototype.at = function (x, y) {
@@ -42,9 +46,28 @@ Chunk.prototype.sw = function (cellA, cellB) {
     var newMat = cellA.mat;
     cellA.mat = cellB.mat;
     cellB.mat = newMat;
+    var newBody = cellA.body;
+    cellA.body = cellB.body;
+    cellB.body = newBody;
     cellA.busy = true;
     cellB.busy = true;
+    this.swapsThisTick++;
   }
+  _.forEach(cellA.getAdjacent, function (adj) {
+    if (cellB.mat.canSwap(adj.mat)) {
+      if (!adj.mat) throw new Error("Undefined cell material");
+      if (!cellB.mat) throw new Error("Undefined this cell material");
+      var newMat = adj.mat;
+      adj.mat = cellB.mat;
+      cellB.mat = newMat;
+      var newBody = adj.body;
+      adj.body = cellB.body;
+      cellB.body = newBody;
+      adj.busy = true;
+      cellB.busy = true;
+      this.swapsThisTick++;
+    }
+  });
 };
 
 Chunk.prototype.gravelVacuumToggle = function (x, y) {
@@ -88,8 +111,9 @@ Chunk.prototype.draw = function (ctx) {
 Chunk.prototype.makePhysicsRaster = function () {
   var rtn = [];
   this.cells.forEach(function (cell) {
+    var body;
     if (cell.mat !== material.vacuum) {
-      var body = Matter.Bodies.rectangle(
+      body = Matter.Bodies.rectangle(
         (cell.x * 10) + 15,
         (cell.y * 10) + 15,
         10,
@@ -102,17 +126,21 @@ Chunk.prototype.makePhysicsRaster = function () {
           }
         }
       );
-      //Matter.Body.rotate(body, Math.PI / 1.3);
-      rtn.push(body);
-      cell.body = body;
+    } else {
+      body = null;
     }
+    //Matter.Body.rotate(body, Math.PI / 1.3);
+    rtn.push(body);
+    cell.body = body;
   });
+
+  rtn = _.compact(rtn);
   console.log("raster size", rtn.length);
   return rtn;
 };
 
-Chunk.prototype.startEngine = function () {
-  var eng = Matter.Engine.create(document.body);
+Chunk.prototype.resetEngine = function () {
+  Matter.World.clear(this.eng.world, true);
   var wallS = Matter.Bodies.rectangle(50, 115, 140, 10, {
     isStatic: true
   });
@@ -126,9 +154,14 @@ Chunk.prototype.startEngine = function () {
     isStatic: true
   });
   var mesh = _.union([wallS, wallW, wallE, wallN], this.makePhysicsRaster());
-  Matter.World.add(eng.world, mesh);
-  Matter.Engine.run(eng);
+  Matter.World.add(this.eng.world, mesh);
+};
+
+Chunk.prototype.startEngine = function () {
+  var eng = Matter.Engine.create(document.getElementById("physx"));
   this.eng = eng;
+  this.resetEngine();
+  Matter.Engine.run(eng);
   return eng;
 };
 
