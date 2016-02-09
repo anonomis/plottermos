@@ -10,12 +10,15 @@ function Cell(x, y, mat, chunk) {
 
 Cell.prototype.tick = function () {
   if (this.busy) return;
-  if (this.mat.tick) this.mat.tick(this);
+  if (this.mat.tick) this.mat.tick(this, this.chunk.getAdjacent(this));
 };
 Cell.prototype.accepts = function (cell) {
   if (this.busy || cell.busy) return false;
   var accepts = this.mat.accepts(cell.mat);
   return accepts;
+};
+Cell.prototype.isStable = function () {
+  return this.stable || this.mat.stable;
 };
 Cell.prototype.isStable = function () {
   return this.stable || this.mat.stable;

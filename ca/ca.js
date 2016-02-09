@@ -9,30 +9,15 @@ require("./Backdrop.js");
 var signals = require("./Interaction.js");
 var Chunk = require('./Chunk.js');
 var material = require('./Material.js');
-
+var data = require('./data.json');
 
 // world create
-var data = [
-  [1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 1, 0, 0, 7, 7, 7, 7, 7, 0, 1],
-  [1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1],
-  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1],
-  [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1],
-  [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1],
-  [0, 2, 1, 0, 1, 1, 1, 7, 7, 7, 7, 0, 0, 1],
-  [0, 2, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1]
-];
-var world;
+var world = new Chunk(10, 10);
 var init = function () {
-  world = new Chunk(10, 10, data);
+  world.setData(data);
   signals.register("click", function (x, y) {
-    var cell = this.at(x, y);
-    if (cell.body) {
-      var physPos = cell.body.position;
-      console.log(x, y, " phys ", (physPos.x - 20) / 10, (physPos.y - 20) / 10);
-    }
+    console.log(this.at(x, y));
   }, world);
-  world.startEngine();
 };
 init();
 
@@ -41,8 +26,12 @@ var physTick = function (delta, tickNo) {
   //Matter.Engine.update(eng, delta, 1);
   world.tick(delta, tickNo);
 };
+
+// interaction
 signals.register(0, physTick, this);
 signals.register(32, physTick, this);
+signals.register(115, world.resetEngine, world);
+//signals.register("click", world.gravelVacuumToggle, world);
 
 // world draw
 var canvas = document.getElementById("layer2");
@@ -50,12 +39,7 @@ var ctx = canvas.getContext("2d");
 ctx.W = canvas.width;
 ctx.H = canvas.height;
 ctx.imageSmoothingEnabled = false;
-var draw = function () {
-  world.draw(ctx);
-};
-
-// runner
-window.running = true;
+window.drawing = true;
 var tickNo = 0;
 var prev = new Date().getTime();
 var run = function () {
@@ -63,13 +47,13 @@ var run = function () {
     var now = new Date().getTime();
     var delta = now - prev;
     tickNo++;
-    if (tickNo % 100 === 0) {
+    if (tickNo % 200 === 0) {
       init();
     } else {
       physTick(delta, tickNo);
-      draw();
+      world.draw(ctx);
     }
-    if (window.running) {
+    if (window.drawing) {
       _.delay(tick, 100);
     }
     prev = now;
