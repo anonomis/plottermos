@@ -21,15 +21,8 @@ var init = function () {
 };
 init();
 
-// world tick
-var physTick = function (delta, tickNo) {
-  //Matter.Engine.update(eng, delta, 1);
-  world.tick(delta, tickNo);
-};
-
 // interaction
-signals.register(0, physTick, this);
-signals.register(32, physTick, this);
+signals.register(32, init, this);
 signals.register(115, world.resetEngine, world);
 //signals.register("click", world.gravelVacuumToggle, world);
 
@@ -50,7 +43,8 @@ var run = function () {
     if (tickNo % 200 === 0) {
       init();
     } else {
-      physTick(delta, tickNo);
+      ctx.time = tickNo;
+      world.tick(delta, tickNo);
       world.draw(ctx);
     }
     if (window.drawing) {

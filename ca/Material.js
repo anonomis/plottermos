@@ -48,7 +48,8 @@ var materialDict = {
     0: "vacuum",
     1: "gravel",
     2: "solid",
-    7: "conveyor"
+    7: "conveyor",
+    8: "conveyorRight"
   },
   _dataTransform: function (symbol) {
     var mat = materialDict[materialDict._symbolIndex[symbol]];
@@ -134,7 +135,7 @@ var materialDict = {
   conveyor: {
     name: "conveyor",
     draw: function (ctx, cell) {
-      if ((Math.ceil(ctx.time / 2) - cell.x) % 3 !== 0) {
+      if ((Math.ceil(ctx.time / 2) + cell.x) % 3) {
         ctx.fillStyle = "#333";
       } else {
         ctx.fillStyle = "#300";
@@ -149,7 +150,32 @@ var materialDict = {
       if (adj.up.body && adj.up.body.motion === 0) {
         Matter.Body.setVelocity(adj.up.body, {
           x: -0.5,
-          y: 1
+          y: 0.01
+        });
+      }
+    },
+    stable: false,
+    makeBody: bodyMakers.sharpSolidSquare
+  },
+  conveyorRight: {
+    name: "conveyorRight",
+    draw: function (ctx, cell) {
+      if ((Math.ceil(ctx.time / 2) - cell.x) % 3) {
+        ctx.fillStyle = "#333";
+      } else {
+        ctx.fillStyle = "#300";
+      }
+      ctx.fillRect(cell.x * 10, cell.y * 10, 10, 10);
+    },
+    canSwap: function (mat) {
+      return false;
+    },
+    tick: function (cell) {
+      var adj = cell.chunk.getAdjacent(cell.x, cell.y);
+      if (adj.up.body && adj.up.body.motion === 0) {
+        Matter.Body.setVelocity(adj.up.body, {
+          x: 0.5,
+          y: 0.01
         });
       }
     },

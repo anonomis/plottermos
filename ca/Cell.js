@@ -17,6 +17,7 @@ Cell.prototype.accepts = function (cell) {
   var accepts = this.mat.accepts(cell.mat);
   return accepts;
 };
+// Please kill us!
 Cell.prototype.isStable = function () {
   return this.stable || this.mat.stable;
 };

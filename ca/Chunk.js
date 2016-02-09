@@ -1,7 +1,9 @@
 var Cell = require("./Cell.js");
 var material = require("./Material.js");
 
-function Chunk(w, h) {
+function Chunk(x, y) {
+  this.x = x;
+  this.y = y;
   this.w = 10;
   this.h = 10;
   this.cells = [];
@@ -29,6 +31,7 @@ Chunk.prototype.setData = function (data) {
     }, this);
   }, this);
   this.startEngine();
+  this.stable = false;
 };
 
 
@@ -45,7 +48,7 @@ Chunk.prototype.tick = function (delta, tickNo) {
         console.log("stable as fucking concrete!")
       }
     } else {
-      this.stableIn = 20;
+      this.stableIn = 500;
     }
   }
 };
@@ -67,10 +70,10 @@ Chunk.prototype.at = function (xDirty, yDirty) {
 
 Chunk.prototype.setMat = function (x, y, mat) {
   var cell = this.at(x, y);
-  if (cell.body) Matter.World.remove(this.eng.world, cell.body);
+  //if (cell.body) Matter.World.remove(this.eng.world, cell.body);
   cell.mat = mat;
   cell.body = mat.makeBody(cell);
-  if (cell.body) Matter.World.add(this.eng.world, cell.body);
+  //if (cell.body) Matter.World.add(this.eng.world, cell.body);
 };
 
 Chunk.prototype.sw = function (cellA, cellB) {
@@ -130,7 +133,6 @@ Chunk.prototype.getAdjacent = function (x, y) {
 };
 
 Chunk.prototype.draw = function (ctx) {
-  ctx.time = new Date().getTime();
   ctx.clearRect(0, 0, ctx.W, ctx.H);
   this.cells.forEach(function (cell) {
     if (cell.mat.draw) cell.mat.draw(ctx, cell);
